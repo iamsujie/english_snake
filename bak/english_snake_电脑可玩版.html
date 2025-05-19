@@ -1,0 +1,1095 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>英语单词贪吃蛇</title>
+    <style>
+        body {
+            font-family: 'Comic Sans MS', 'Arial Rounded MT Bold', sans-serif;
+            background-color: #f0f5ff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        h1 {
+            color: #ff6b6b;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+            margin-bottom: 10px;
+        }
+        
+        .word-group-selector-container {
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column; 
+            gap: 5px; 
+            align-items: center; 
+            width: 500px; 
+            max-width: 100%;
+        }
+
+        #word-group-label {
+            font-size: 16px;
+            color: #333;
+            margin-bottom: 5px; /* Add some space below the label */
+        }
+
+        #word-group-select {
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            font-size: 16px;
+            background-color: white;
+            cursor: pointer;
+            width: 100%; 
+            max-width: 300px; 
+        }
+        
+        .game-container {
+            position: relative;
+            margin: 20px 0;
+        }
+        
+        #game-board {
+            border: 10px solid #a5d8ff;
+            border-radius: 15px;
+            background-color: #e7f5ff;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+        }
+        
+        .game-info {
+            background-color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 500px;
+            max-width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .word-display {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .word-icon {
+            width: 50px;
+            height: 50px;
+            object-fit: contain;
+        }
+        
+        .current-word {
+            font-size: 24px;
+            color: #339af0;
+            margin: 0;
+        }
+        
+        .score {
+            font-size: 20px;
+            color: #51cf66;
+            margin: 0;
+        }
+        
+        .instructions {
+            background-color: #fff9db;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            border-left: 5px solid #ffd43b;
+            max-height: 60px;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+        
+        .instructions.expanded {
+            max-height: 500px;
+        }
+        
+        .instructions h3 {
+            color: #f08c00;
+            margin-top: 0;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .instructions h3::after {
+            content: "▼";
+            font-size: 14px;
+            transition: transform 0.3s;
+        }
+        
+        .instructions.expanded h3::after {
+            transform: rotate(180deg);
+        }
+        
+        .instructions ol {
+            padding-left: 20px;
+            margin-bottom: 0;
+        }
+        
+        .instructions li {
+            margin-bottom: 8px;
+        }
+        
+        .game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(255, 107, 107, 0.9);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            display: none;
+            z-index: 100;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            width: 70%;
+            max-width: 400px;
+        }
+        
+        .word-complete {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(100, 200, 100, 0.9);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            display: none;
+            z-index: 100;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            width: 70%;
+            max-width: 400px;
+        }
+        
+        .continue-btn {
+            background-color: white;
+            color: #339af0;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        .continue-btn:hover {
+            background-color: #339af0;
+            color: white;
+        }
+        
+        .restart-btn {
+            background-color: white;
+            color: #ff6b6b;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        .restart-btn:hover {
+            background-color: #ff8787;
+            color: white;
+        }
+        
+        .snake-segment {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background-color: #51cf66;
+            border-radius: 4px;
+            z-index: 10;
+        }
+        
+        .snake-head {
+            background-color: #2b8a3e;
+            border-radius: 50% 50% 5px 5px;
+        }
+        
+        .food {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+            z-index: 5;
+        }
+        
+        .food-letter {
+            pointer-events: none;
+        }
+        
+        .celebration {
+            position: absolute;
+            font-size: 24px;
+            color: #ff6b6b;
+            font-weight: bold;
+            animation: float 1.5s ease-out;
+            opacity: 0;
+            z-index: 20;
+        }
+        
+        .penalty {
+            position: absolute;
+            font-size: 24px;
+            color: #339af0;
+            font-weight: bold;
+            animation: float 1.5s ease-out;
+            opacity: 0;
+            z-index: 20;
+        }
+        
+        @keyframes float {
+            0% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>🐍 英语单词贪吃蛇 🍎</h1>
+    
+    <div class="word-group-selector-container">
+        <label id="word-group-label" for="word-group-select">请选择需要练习拼写的单词组:</label>
+        <select id="word-group-select">
+            <!-- Options will be populated by JavaScript -->
+        </select>
+    </div>
+    
+    <div class="game-info">
+        <div class="word-display">
+            <img id="word-icon" class="word-icon" src="" alt="单词图标">
+            <div>
+                <p class="current-word">当前单词: <span id="word-meaning">苹果</span></p>
+                <p class="score">得分: <span id="score">0</span> | 连击: <span id="combo">0</span> | 最长连击: <span id="max-combo">0</span></p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="game-container">
+        <canvas id="game-board" width="500" height="400" tabindex="0"></canvas>
+        <div class="game-over" id="game-over">
+            <h2>游戏结束!</h2>
+            <p>你的最终得分: <span id="final-score">0</span></p>
+            <button class="restart-btn" id="restart-btn">再玩一次</button>
+        </div>
+        <div class="word-complete" id="word-complete">
+            <h2>单词完成!</h2>
+            <p id="completed-word">apple [苹果]</p>
+            <button class="continue-btn" id="continue-btn" tabindex="0">继续游戏</button>
+        </div>
+    </div>
+    
+    <div class="instructions">
+        <h3 id="instructions-toggle">📝 游戏规则说明 (点击展开)</h3>
+        <ol>
+            <li><strong>控制方式</strong>：使用键盘方向键 ↑ ↓ ← → 控制小蛇移动</li>
+            <li><strong>游戏目标</strong>：按照当前单词的字母顺序吃掉正确的字母</li>
+            <li><strong>食物规则</strong>：
+                <ul>
+                    <li>每次会出现3个字母食物块，其中1个是正确的</li>
+                    <li>正确字母是当前单词的下一个字母</li>
+                    <li>正确字母的位置和颜色每次随机变化</li>
+                </ul>
+            </li>
+            <li><strong>得分规则</strong>：
+                <ul>
+                    <li>吃对正确字母：蛇身变长+10分</li>
+                    <li>吃错字母：蛇身缩短-5分，并更换新单词</li>
+                    <li>完成整个单词：额外+50分</li>
+                </ul>
+            </li>
+            <li><strong>特殊效果</strong>：
+                <ul>
+                    <li>碰到墙壁会从另一边穿出</li>
+                    <li>完成单词后游戏暂停，点击继续后继续游戏</li>
+                </ul>
+            </li>
+        </ol>
+    </div>
+
+    <script>
+        // 游戏常量
+        const GRID_SIZE = 20;
+        const GAME_WIDTH = 500;
+        const GAME_HEIGHT = 400;
+        const GRID_COLS = GAME_WIDTH / GRID_SIZE;
+        const GRID_ROWS = GAME_HEIGHT / GRID_SIZE;
+        
+        const GENERIC_ICON_URL = "https://cdn-icons-png.flaticon.com/128/1005/1005037.png"; 
+
+        const WORD_GROUPS = {
+            1: [
+                { word: "ten", meaning: "十", icon: GENERIC_ICON_URL }, { word: "twenty", meaning: "二十", icon: GENERIC_ICON_URL },
+                { word: "thirty", meaning: "三十", icon: GENERIC_ICON_URL }, { word: "forty", meaning: "四十", icon: GENERIC_ICON_URL },
+                { word: "fifty", meaning: "五十", icon: GENERIC_ICON_URL }
+            ],
+            2: [
+                { word: "sixty", meaning: "六十", icon: GENERIC_ICON_URL }, { word: "seventy", meaning: "七十", icon: GENERIC_ICON_URL },
+                { word: "eighty", meaning: "八十", icon: GENERIC_ICON_URL }, { word: "ninety", meaning: "九十", icon: GENERIC_ICON_URL },
+                { word: "one hundred", meaning: "一百", icon: GENERIC_ICON_URL }
+            ],
+            3: [
+                { word: "fifth", meaning: "第五", icon: GENERIC_ICON_URL }, { word: "third", meaning: "第三", icon: GENERIC_ICON_URL },
+                { word: "fourth", meaning: "第四", icon: GENERIC_ICON_URL }, { word: "first", meaning: "第一", icon: GENERIC_ICON_URL },
+                { word: "second", meaning: "第二", icon: GENERIC_ICON_URL }
+            ],
+            4: [
+                { word: "one", meaning: "一", icon: GENERIC_ICON_URL }, { word: "two", meaning: "二", icon: GENERIC_ICON_URL },
+                { word: "three", meaning: "三", icon: GENERIC_ICON_URL }, { word: "four", meaning: "四", icon: GENERIC_ICON_URL },
+                { word: "five", meaning: "五", icon: GENERIC_ICON_URL }
+            ],
+            5: [
+                { word: "six", meaning: "六", icon: GENERIC_ICON_URL }, { word: "seven", meaning: "七", icon: GENERIC_ICON_URL },
+                { word: "eight", meaning: "八", icon: GENERIC_ICON_URL }, { word: "nine", meaning: "九", icon: GENERIC_ICON_URL },
+                { word: "ten", meaning: "十", icon: GENERIC_ICON_URL }
+            ],
+            6: [
+                { word: "heart", meaning: "心形", icon: GENERIC_ICON_URL }, { word: "star", meaning: "五角星", icon: GENERIC_ICON_URL },
+                { word: "rectangle", meaning: "长方形", icon: GENERIC_ICON_URL }, { word: "circle", meaning: "圆形", icon: GENERIC_ICON_URL },
+                { word: "square", meaning: "正方形", icon: GENERIC_ICON_URL }, { word: "triangle", meaning: "三角形", icon: GENERIC_ICON_URL }
+            ],
+            7: [
+                { word: "butterfly", meaning: "蝴蝶", icon: GENERIC_ICON_URL }, { word: "bee", meaning: "蜜蜂", icon: GENERIC_ICON_URL },
+                { word: "cricket", meaning: "蟋蟀", icon: GENERIC_ICON_URL }, { word: "ant", meaning: "蚂蚁", icon: GENERIC_ICON_URL },
+                { word: "worm", meaning: "虫子", icon: GENERIC_ICON_URL }, { word: "spider", meaning: "蜘蛛", icon: GENERIC_ICON_URL }
+            ],
+            8: [
+                { word: "insect", meaning: "昆虫", icon: GENERIC_ICON_URL }, { word: "web", meaning: "网", icon: GENERIC_ICON_URL },
+                { word: "behind", meaning: "在…后面", icon: GENERIC_ICON_URL }, { word: "in front", meaning: "在…前面", icon: GENERIC_ICON_URL },
+                { word: "above", meaning: "在…上面", icon: GENERIC_ICON_URL }, { word: "between", meaning: "在…中间", icon: GENERIC_ICON_URL }
+            ],
+            9: [
+                { word: "cage", meaning: "笼子", icon: GENERIC_ICON_URL }, { word: "winter", meaning: "冬天", icon: GENERIC_ICON_URL },
+                { word: "rice", meaning: "米饭", icon: GENERIC_ICON_URL }, { word: "pet", meaning: "宠物", icon: GENERIC_ICON_URL },
+                { word: "keep", meaning: "养", icon: GENERIC_ICON_URL }
+            ],
+            10: [
+                { word: "when", meaning: "什么时候", icon: GENERIC_ICON_URL }, { word: "why", meaning: "为什么", icon: GENERIC_ICON_URL },
+                { word: "what", meaning: "什么", icon: GENERIC_ICON_URL }, { word: "who", meaning: "谁", icon: GENERIC_ICON_URL },
+                { word: "where", meaning: "哪里", icon: GENERIC_ICON_URL }, { word: "how", meaning: "如何", icon: GENERIC_ICON_URL }
+            ],
+            11: [
+                { word: "knee", meaning: "膝盖", icon: GENERIC_ICON_URL }, { word: "flea", meaning: "跳蚤", icon: GENERIC_ICON_URL },
+                { word: "me", meaning: "我", icon: GENERIC_ICON_URL }, { word: "eat", meaning: "吃", icon: GENERIC_ICON_URL },
+                { word: "she", meaning: "她", icon: GENERIC_ICON_URL }, { word: "foot", meaning: "脚", icon: GENERIC_ICON_URL }
+            ],
+            12: [
+                { word: "recycle", meaning: "可回收", icon: GENERIC_ICON_URL }, { word: "picking", meaning: "捡起/拾", icon: GENERIC_ICON_URL },
+                { word: "bin", meaning: "垃圾桶", icon: GENERIC_ICON_URL }, { word: "planting", meaning: "种植", icon: GENERIC_ICON_URL },
+                { word: "watering", meaning: "浇水", icon: GENERIC_ICON_URL }
+            ],
+            13: [
+                { word: "friend", meaning: "朋友", icon: GENERIC_ICON_URL }, { word: "aunt", meaning: "阿姨", icon: GENERIC_ICON_URL },
+                { word: "uncle", meaning: "叔叔", icon: GENERIC_ICON_URL }, { word: "grandma", meaning: "奶奶", icon: GENERIC_ICON_URL },
+                { word: "grandpa", meaning: "爷爷", icon: GENERIC_ICON_URL }
+            ],
+            14: [
+                { word: "mother", meaning: "妈妈", icon: GENERIC_ICON_URL }, { word: "father", meaning: "爸爸", icon: GENERIC_ICON_URL },
+                { word: "brother", meaning: "兄弟", icon: GENERIC_ICON_URL }, { word: "sister", meaning: "姐妹", icon: GENERIC_ICON_URL }
+            ],
+            15: [
+                { word: "stem", meaning: "茎", icon: GENERIC_ICON_URL }, { word: "leaf", meaning: "叶子", icon: GENERIC_ICON_URL },
+                { word: "tree", meaning: "树", icon: GENERIC_ICON_URL }, { word: "flower", meaning: "花", icon: GENERIC_ICON_URL },
+                { word: "roots", meaning: "根", icon: GENERIC_ICON_URL }
+            ],
+            16: [
+                { word: "this", meaning: "这个", icon: GENERIC_ICON_URL }, { word: "that", meaning: "那个", icon: GENERIC_ICON_URL },
+                { word: "these", meaning: "这些", icon: GENERIC_ICON_URL }, { word: "those", meaning: "那些", icon: GENERIC_ICON_URL },
+                { word: "they", meaning: "他们", icon: GENERIC_ICON_URL }
+            ],
+            17: [
+                { word: "basket", meaning: "篮子", icon: GENERIC_ICON_URL }, { word: "railing", meaning: "栏杆", icon: GENERIC_ICON_URL },
+                { word: "ladder", meaning: "梯子", icon: GENERIC_ICON_URL }, { word: "stairs", meaning: "楼梯", icon: GENERIC_ICON_URL },
+                { word: "roof", meaning: "屋顶", icon: GENERIC_ICON_URL }, { word: "wall", meaning: "墙", icon: GENERIC_ICON_URL }
+            ],
+            18: [
+                { word: "hall", meaning: "门厅", icon: GENERIC_ICON_URL }, { word: "bedroom", meaning: "卧室", icon: GENERIC_ICON_URL },
+                { word: "kitchen", meaning: "厨房", icon: GENERIC_ICON_URL }, { word: "garden", meaning: "花园", icon: GENERIC_ICON_URL },
+                { word: "bathroom", meaning: "浴室", icon: GENERIC_ICON_URL }
+            ],
+            19: [
+                { word: "floor", meaning: "地板", icon: GENERIC_ICON_URL }, { word: "bed", meaning: "床", icon: GENERIC_ICON_URL },
+                { word: "clean", meaning: "清理/干净", icon: GENERIC_ICON_URL }, { word: "table", meaning: "桌子", icon: GENERIC_ICON_URL },
+                { word: "sink", meaning: "水槽", icon: GENERIC_ICON_URL }
+            ],
+            20: [
+                { word: "warm", meaning: "温暖的", icon: GENERIC_ICON_URL }, { word: "cold", meaning: "冷的", icon: GENERIC_ICON_URL },
+                { word: "cool", meaning: "凉爽的", icon: GENERIC_ICON_URL }, { word: "hot", meaning: "热的", icon: GENERIC_ICON_URL },
+                { word: "keep", meaning: "保持", icon: GENERIC_ICON_URL } 
+            ],
+            21: [
+                { word: "goose", meaning: "鹅", icon: GENERIC_ICON_URL }, { word: "moon", meaning: "月亮", icon: GENERIC_ICON_URL },
+                { word: "cooker", meaning: "厨师", icon: GENERIC_ICON_URL }, { word: "good", meaning: "好的", icon: GENERIC_ICON_URL },
+                { word: "look", meaning: "看", icon: GENERIC_ICON_URL }, { word: "book", meaning: "书", icon: GENERIC_ICON_URL }
+            ],
+            22: [
+                { word: "zoo", meaning: "动物园", icon: GENERIC_ICON_URL }, { word: "big", meaning: "大的", icon: GENERIC_ICON_URL },
+                { word: "strong", meaning: "强壮的", icon: GENERIC_ICON_URL }, { word: "tiny", meaning: "微小的", icon: GENERIC_ICON_URL },
+                { word: "clever", meaning: "聪明的", icon: GENERIC_ICON_URL }
+            ],
+            23: [
+                { word: "loud", meaning: "大声的", icon: GENERIC_ICON_URL }, { word: "quiet", meaning: "小声的", icon: GENERIC_ICON_URL },
+                { word: "tired", meaning: "疲劳的", icon: GENERIC_ICON_URL }, { word: "happy", meaning: "快乐的", icon: GENERIC_ICON_URL },
+                { word: "busy", meaning: "忙碌的", icon: GENERIC_ICON_URL }, { word: "kind", meaning: "善良的", icon: GENERIC_ICON_URL },
+                { word: "friendly", meaning: "友好的", icon: GENERIC_ICON_URL }
+            ],
+            24: [
+                { word: "count", meaning: "数", icon: GENERIC_ICON_URL }, { word: "jump", meaning: "跳", icon: GENERIC_ICON_URL },
+                { word: "walk", meaning: "走", icon: GENERIC_ICON_URL }, { word: "run", meaning: "跑", icon: GENERIC_ICON_URL },
+                { word: "throw", meaning: "扔", icon: GENERIC_ICON_URL }, { word: "catch", meaning: "抓住", icon: GENERIC_ICON_URL }
+            ],
+            25: [
+                { word: "bite", meaning: "咬", icon: GENERIC_ICON_URL }, { word: "live", meaning: "住", icon: GENERIC_ICON_URL },
+                { word: "move", meaning: "移动", icon: GENERIC_ICON_URL }, { word: "chase", meaning: "追", icon: GENERIC_ICON_URL },
+                { word: "lift up", meaning: "举起", icon: GENERIC_ICON_URL }, { word: "shiver", meaning: "颤抖", icon: GENERIC_ICON_URL },
+                { word: "scare", meaning: "吓唬", icon: GENERIC_ICON_URL }
+            ],
+            // Group 26 is skipped
+            27: [
+                { word: "read", meaning: "读", icon: GENERIC_ICON_URL }, { word: "climb", meaning: "爬", icon: GENERIC_ICON_URL },
+                { word: "cut", meaning: "切", icon: GENERIC_ICON_URL }, { word: "talk", meaning: "交谈", icon: GENERIC_ICON_URL },
+                { word: "swim", meaning: "游泳", icon: GENERIC_ICON_URL }, { word: "stand", meaning: "站", icon: GENERIC_ICON_URL },
+                { word: "fall", meaning: "掉落", icon: GENERIC_ICON_URL }
+            ],
+            28: [
+                { word: "come", meaning: "来", icon: GENERIC_ICON_URL }, { word: "sit", meaning: "坐", icon: GENERIC_ICON_URL },
+                { word: "help", meaning: "帮助", icon: GENERIC_ICON_URL }, { word: "grow", meaning: "生长", icon: GENERIC_ICON_URL },
+                { word: "call", meaning: "呼叫", icon: GENERIC_ICON_URL }, { word: "play", meaning: "玩", icon: GENERIC_ICON_URL },
+                { word: "need", meaning: "需要", icon: GENERIC_ICON_URL }
+            ],
+            29: [
+                { word: "stand", meaning: "站", icon: GENERIC_ICON_URL }, { word: "wave", meaning: "挥手", icon: GENERIC_ICON_URL }, 
+                { word: "hop", meaning: "单脚跳", icon: GENERIC_ICON_URL }, { word: "wiggle", meaning: "扭动", icon: GENERIC_ICON_URL },
+                { word: "nod", meaning: "点头", icon: GENERIC_ICON_URL }, { word: "touch", meaning: "触摸", icon: GENERIC_ICON_URL }
+            ],
+            30: [
+                { word: "clock", meaning: "钟", icon: GENERIC_ICON_URL }, { word: "calendar", meaning: "日历", icon: GENERIC_ICON_URL },
+                { word: "tablet", meaning: "平板", icon: GENERIC_ICON_URL }, { word: "book", meaning: "书", icon: GENERIC_ICON_URL }, 
+                { word: "map", meaning: "地图", icon: GENERIC_ICON_URL }
+            ],
+            31: [
+                { word: "ball", meaning: "球", icon: GENERIC_ICON_URL }, { word: "skipping", meaning: "跳绳", icon: GENERIC_ICON_URL },
+                { word: "phone", meaning: "手机", icon: GENERIC_ICON_URL }, { word: "pencil", meaning: "铅笔", icon: GENERIC_ICON_URL },
+                { word: "hat", meaning: "帽子", icon: GENERIC_ICON_URL }, { word: "key", meaning: "钥匙", icon: GENERIC_ICON_URL }
+            ],
+            32: [
+                { word: "sunglasses", meaning: "太阳镜", icon: GENERIC_ICON_URL }, { word: "outside", meaning: "外面", icon: GENERIC_ICON_URL },
+                { word: "window cleaner", meaning: "窗户清洁工", icon: GENERIC_ICON_URL }, { word: "police officer", meaning: "警察", icon: GENERIC_ICON_URL },
+                { word: "reporter", meaning: "记者", icon: GENERIC_ICON_URL }
+            ],
+            33: [
+                { word: "helmet", meaning: "头盔", icon: GENERIC_ICON_URL }, { word: "gloves", meaning: "手套", icon: GENERIC_ICON_URL },
+                { word: "mask", meaning: "面具", icon: GENERIC_ICON_URL }, { word: "nurse", meaning: "护士", icon: GENERIC_ICON_URL },
+                { word: "boot", meaning: "靴子", icon: GENERIC_ICON_URL }, { word: "driver", meaning: "司机", icon: GENERIC_ICON_URL },
+                { word: "jacket", meaning: "夹克", icon: GENERIC_ICON_URL }
+            ],
+            34: [
+                { word: "apple", meaning: "苹果", icon: GENERIC_ICON_URL }, { word: "orange", meaning: "橘子", icon: GENERIC_ICON_URL },
+                { word: "carrots", meaning: "胡萝卜", icon: GENERIC_ICON_URL }, { word: "soup", meaning: "汤", icon: GENERIC_ICON_URL },
+                { word: "milk", meaning: "牛奶", icon: GENERIC_ICON_URL }, { word: "yogurt", meaning: "酸奶", icon: GENERIC_ICON_URL }
+            ],
+            35: [
+                { word: "shadow", meaning: "影子", icon: GENERIC_ICON_URL }, { word: "high", meaning: "高的", icon: GENERIC_ICON_URL },
+                { word: "low", meaning: "低的", icon: GENERIC_ICON_URL }, { word: "some", meaning: "一些", icon: GENERIC_ICON_URL },
+                { word: "most", meaning: "大部分", icon: GENERIC_ICON_URL }, { word: "all", meaning: "所有", icon: GENERIC_ICON_URL },
+                { word: "sky", meaning: "天空", icon: GENERIC_ICON_URL }
+            ],
+            36: [
+                { word: "moon", meaning: "月亮", icon: GENERIC_ICON_URL }, { word: "long", meaning: "长的", icon: GENERIC_ICON_URL }, 
+                { word: "short", meaning: "短的", icon: GENERIC_ICON_URL }, { word: "sun", meaning: "太阳", icon: GENERIC_ICON_URL },
+                { word: "star", meaning: "星星", icon: GENERIC_ICON_URL }, { word: "earth", meaning: "地球", icon: GENERIC_ICON_URL },
+                { word: "planet", meaning: "星球", icon: GENERIC_ICON_URL }
+            ]
+        };
+        
+        // 游戏变量
+        let snake = [];
+        let direction = "RIGHT";
+        let nextDirection = "RIGHT";
+        let food = [];
+        let currentWordList = []; // Holds words from the selected group
+        let currentWord = null;
+        let nextLetterIndex = 0;
+        let score = 0;
+        let combo = 0;
+        let maxCombo = 0;
+        let gameSpeed = 200;
+        let gameLoop;
+        let gameOver = false;
+        let gamePaused = false;
+        let isWordCompletePopupActive = false; // New flag
+        
+        // DOM元素
+        const canvas = document.getElementById("game-board");
+        const ctx = canvas.getContext("2d");
+        const wordMeaningEl = document.getElementById("word-meaning");
+        const wordIconEl = document.getElementById("word-icon");
+        const scoreEl = document.getElementById("score");
+        const comboEl = document.getElementById("combo");
+        const maxComboEl = document.getElementById("max-combo");
+        const gameOverEl = document.getElementById("game-over");
+        const wordCompleteEl = document.getElementById("word-complete");
+        const completedWordEl = document.getElementById("completed-word");
+        const finalScoreEl = document.getElementById("final-score");
+        const restartBtn = document.getElementById("restart-btn");
+        const continueBtn = document.getElementById("continue-btn");
+        const instructionsToggle = document.getElementById("instructions-toggle");
+        const instructionsEl = document.querySelector(".instructions");
+        const wordGroupSelect = document.getElementById("word-group-select");
+        
+        // 初始化游戏
+        function initGame() {
+            // 重置游戏状态
+            snake = [
+                { x: 5, y: 10 },
+                { x: 4, y: 10 },
+                { x: 3, y: 10 }
+            ];
+            direction = "RIGHT";
+            nextDirection = "RIGHT";
+            score = 0;
+            combo = 0;
+            maxCombo = 0; // Reset maxCombo for a new game session
+            gameOver = false;
+            gamePaused = false;
+            isWordCompletePopupActive = false; // Reset flag
+            gameOverEl.style.display = "none";
+            wordCompleteEl.style.display = "none";
+            
+            selectNewWord();
+            generateFood();
+            updateUI();
+            
+            if (gameLoop) clearInterval(gameLoop);
+            gameLoop = setInterval(gameStep, gameSpeed);
+            canvas.focus(); // Ensure canvas gets focus when a new game starts
+        }
+        
+        // 更换单词组但保持蛇的状态
+        function changeWordGroup(newGroupKey) {
+            // Only change the word list but keep snake state
+            if (WORD_GROUPS[newGroupKey]) {
+                currentWordList = WORD_GROUPS[newGroupKey];
+                
+                // Unpause if paused from word completion
+                if (gamePaused && isWordCompletePopupActive) {
+                    gamePaused = false;
+                    isWordCompletePopupActive = false;
+                }
+                
+                // Clear any popups
+                gameOverEl.style.display = "none";
+                wordCompleteEl.style.display = "none";
+                
+                // Get a new word and food
+                selectNewWord();
+                generateFood();
+                updateUI();
+                
+                // Ensure the game is running
+                if (!gameLoop || gameOver) {
+                    if (gameLoop) clearInterval(gameLoop);
+                    gameLoop = setInterval(gameStep, gameSpeed);
+                }
+                
+                canvas.focus();
+            }
+        }
+        
+        // 选择新单词
+        function selectNewWord() {
+            if (!currentWordList || currentWordList.length === 0) {
+                const firstGroupKey = Object.keys(WORD_GROUPS)[0]; // Default to first group
+                if (WORD_GROUPS[firstGroupKey]) {
+                    currentWordList = WORD_GROUPS[firstGroupKey];
+                     if (wordGroupSelect.value !== firstGroupKey) { 
+                         wordGroupSelect.value = firstGroupKey; // Sync dropdown
+                    }
+                } else {
+                    alert("错误：单词列表为空！");
+                    gameOver = true;
+                    return;
+                }
+            }
+            currentWord = currentWordList[Math.floor(Math.random() * currentWordList.length)];
+            nextLetterIndex = 0;
+            updateUI(); // Ensure UI (like meaning and icon) is updated. This line was previously commented out, restoring it.
+        }
+        
+        // 生成食物（现在每次生成3个字母，其中1个是正确的）
+        function generateFood() {
+            // 清除旧食物
+            food = [];
+            
+            if (!currentWord || typeof currentWord.word !== 'string' || nextLetterIndex >= currentWord.word.length) {
+                // console.error("Cannot generate food: currentWord is not set or nextLetterIndex is out of bounds.");
+                // This might happen if a new word group is selected and initGame is called, but currentWord isn't ready
+                // Or if all words in a group are very short / game ends abruptly
+                // For now, let's prevent error and maybe select a new word if possible
+                // selectNewWord(); // This could lead to a loop if called too eagerly
+                return; // Exit if no valid currentWord or letter
+            }
+            
+            // 当前应吃的字母
+            const currentLetter = currentWord.word[nextLetterIndex];
+            
+            // 随机选择2个错误字母（从当前单词的其他字母或随机字母中选）
+            let wrongLetters = [];
+            const otherLettersInWord = currentWord.word.split('').filter((_, i) => i !== nextLetterIndex);
+            
+            if (otherLettersInWord.length > 0) {
+                const randomIndex = Math.floor(Math.random() * otherLettersInWord.length);
+                wrongLetters.push(otherLettersInWord[randomIndex]);
+            }
+            
+            const alphabet = 'abcdefghijklmnopqrstuvwxyz';
+            while (wrongLetters.length < 2) {
+                const randomLetter = alphabet[Math.floor(Math.random() * alphabet.length)];
+                if (randomLetter !== currentLetter && !wrongLetters.includes(randomLetter) && currentWord.word.indexOf(randomLetter) === -1) { // ensure not any letter from current word
+                    wrongLetters.push(randomLetter);
+                }
+            }
+            
+            const allLetters = [currentLetter, ...wrongLetters].sort(() => Math.random() - 0.5);
+            
+            for (let i = 0; i < 3; i++) {
+                let foodItem;
+                let attempts = 0; // Prevent infinite loop
+                do {
+                    foodItem = {
+                        x: Math.floor(Math.random() * GRID_COLS),
+                        y: Math.floor(Math.random() * GRID_ROWS),
+                        letter: allLetters[i],
+                        type: allLetters[i] === currentLetter ? "correct" : "wrong",
+                        color: getRandomFoodColor()
+                    };
+                    attempts++;
+                } while (
+                    (isPositionOnSnake(foodItem.x, foodItem.y) || 
+                    food.some(f => f.x === foodItem.x && f.y === foodItem.y)) && attempts < 100 // Max 100 attempts to find a spot
+                );
+                if (attempts < 100) { // Only add food if a spot was found
+                   food.push(foodItem);
+                }
+            }
+        }
+        
+        // 获取随机食物颜色（正确食物用红色系，错误食物随机颜色）
+        function getRandomFoodColor() {
+            const colors = [
+                '#ff6b6b', '#ff8787', '#ff5252', // 红色系
+                '#fcc419', '#ffd43b', '#fab005',   // 黄色系
+                '#51cf66', '#40c057', '#37b24d',   // 绿色系
+                '#339af0', '#228be6', '#1c7ed6',   // 蓝色系
+                '#ae3ec9', '#9c36b5', '#862e9c'    // 紫色系
+            ];
+            return colors[Math.floor(Math.random() * colors.length)];
+        }
+        
+        // 检查位置是否在蛇身上
+        function isPositionOnSnake(x, y) {
+            return snake.some(segment => segment.x === x && segment.y === y);
+        }
+        
+        // 游戏主循环
+        function gameStep() {
+            if (gameOver || gamePaused) return;
+            
+            // 更新方向
+            direction = nextDirection;
+            
+            // 移动蛇
+            const head = { ...snake[0] };
+            
+            switch (direction) {
+                case "UP":
+                    head.y -= 1;
+                    break;
+                case "DOWN":
+                    head.y += 1;
+                    break;
+                case "LEFT":
+                    head.x -= 1;
+                    break;
+                case "RIGHT":
+                    head.x += 1;
+                    break;
+            }
+            
+            // 穿墙处理
+            if (head.x < 0) head.x = GRID_COLS - 1;
+            if (head.x >= GRID_COLS) head.x = 0;
+            if (head.y < 0) head.y = GRID_ROWS - 1;
+            if (head.y >= GRID_ROWS) head.y = 0;
+            
+            // 检查自身碰撞
+            if (snake.some(segment => segment.x === head.x && segment.y === head.y)) {
+                endGame();
+                return;
+            }
+            
+            // 添加到蛇头
+            snake.unshift(head);
+            
+            // 检查是否吃到食物
+            const eatenFoodIndex = food.findIndex(f => f.x === head.x && f.y === head.y);
+            
+            if (eatenFoodIndex !== -1) {
+                const eatenFood = food[eatenFoodIndex];
+                
+                if (eatenFood.type === "correct") {
+                    // 吃对了
+                    handleCorrectFood();
+                } else {
+                    // 吃错了
+                    handleWrongFood();
+                }
+                
+                // 生成新食物
+                generateFood();
+            } else {
+                // 没吃到食物，移除蛇尾
+                snake.pop();
+            }
+            
+            // 绘制游戏
+            drawGame();
+        }
+        
+        // 处理吃对食物
+        function handleCorrectFood() {
+            const correctFoodItem = food.find(f => f.x === snake[0].x && f.y === snake[0].y && f.type === "correct");
+            if (correctFoodItem) {
+                showCelebration("+10", correctFoodItem);
+            }
+            
+            score += 10;
+            combo += 1;
+            if (combo > maxCombo) {
+                maxCombo = combo;
+            }
+            
+            nextLetterIndex += 1;
+            
+            if (currentWord && nextLetterIndex >= currentWord.word.length) {
+                score += 50;
+                showWordComplete();
+            } else {
+                // Only generate new food if word is not complete, snake grows implicitly by not popping tail
+            }
+            updateUI();
+        }
+        
+        // 显示单词完成提示
+        function showWordComplete() {
+            gamePaused = true;
+            isWordCompletePopupActive = true; // Set flag
+            completedWordEl.textContent = `${currentWord.word} [${currentWord.meaning}]`;
+            wordCompleteEl.style.display = "block";
+            // Focus the continue button to make it easily accessible via keyboard
+            setTimeout(() => {
+                continueBtn.focus();
+            }, 100); // Short delay to ensure DOM is ready
+        }
+        
+        // 继续游戏
+        function continueGame() {
+            gamePaused = false;
+            isWordCompletePopupActive = false; // Reset flag
+            wordCompleteEl.style.display = "none";
+            selectNewWord(); 
+            generateFood();
+            updateUI();
+            canvas.focus(); // Ensure canvas gets focus after continuing
+        }
+        
+        // 处理吃错食物
+        function handleWrongFood() {
+            const wrongFoodItem = food.find(f => f.x === snake[0].x && f.y === snake[0].y && f.type === "wrong");
+            if (wrongFoodItem) {
+                showPenalty("-5", wrongFoodItem);
+            }
+
+            score = Math.max(0, score - 5);
+            
+            if (snake.length > 3) {
+                snake.pop();
+            }
+            
+            combo = 0;
+            selectNewWord(); 
+            // generateFood(); // generateFood will be called after new word is selected or in gameStep
+            updateUI();
+        }
+        
+        // 显示庆祝效果
+        function showCelebration(text, position) {
+            const celebration = document.createElement("div");
+            celebration.className = "celebration";
+            celebration.textContent = text;
+            // Ensure position is valid and apply styles
+            if (position && typeof position.x === 'number' && typeof position.y === 'number') {
+                celebration.style.left = `${position.x * GRID_SIZE}px`;
+                celebration.style.top = `${position.y * GRID_SIZE}px`;
+            }
+            document.querySelector(".game-container").appendChild(celebration);
+            
+            setTimeout(() => {
+                celebration.remove();
+            }, 1500);
+        }
+        
+        // 显示惩罚效果
+        function showPenalty(text, position) {
+            const penalty = document.createElement("div");
+            penalty.className = "penalty";
+            penalty.textContent = text;
+            if (position && typeof position.x === 'number' && typeof position.y === 'number') {
+                penalty.style.left = `${position.x * GRID_SIZE}px`;
+                penalty.style.top = `${position.y * GRID_SIZE}px`;
+            }
+            document.querySelector(".game-container").appendChild(penalty);
+            
+            setTimeout(() => {
+                penalty.remove();
+            }, 1500);
+        }
+        
+        // 结束游戏
+        function endGame() {
+            gameOver = true;
+            clearInterval(gameLoop);
+            finalScoreEl.textContent = score;
+            gameOverEl.style.display = "block";
+        }
+        
+        // 绘制游戏
+        function drawGame() {
+            ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+            ctx.fillStyle = "#e7f5ff";
+            ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+            
+            snake.forEach((segment, index) => {
+                const x = segment.x * GRID_SIZE;
+                const y = segment.y * GRID_SIZE;
+                
+                if (index === 0) {
+                    ctx.fillStyle = "#2b8a3e";
+                    ctx.beginPath();
+                    ctx.roundRect(x, y, GRID_SIZE, GRID_SIZE, [10, 10, 5, 5]);
+                    ctx.fill();
+                } else {
+                    ctx.fillStyle = index % 2 === 0 ? "#51cf66" : "#40c057";
+                    ctx.fillRect(x, y, GRID_SIZE, GRID_SIZE);
+                    ctx.fillStyle = "#d3f9d8";
+                    ctx.fillRect(x + 4, y + 4, GRID_SIZE - 8, GRID_SIZE - 8);
+                }
+            });
+            
+            food.forEach(f => {
+                const x = f.x * GRID_SIZE;
+                const y = f.y * GRID_SIZE;
+                ctx.fillStyle = f.color;
+                ctx.beginPath();
+                ctx.arc(x + GRID_SIZE / 2, y + GRID_SIZE / 2, GRID_SIZE / 2, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = f.type === "correct" ? "#ff8787" : "#ffd43b";
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(x + GRID_SIZE / 2, y + GRID_SIZE / 2, GRID_SIZE / 2 + 2, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.fillStyle = "white";
+                ctx.font = "bold 12px Arial";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText(f.letter.toUpperCase(), x + GRID_SIZE / 2, y + GRID_SIZE / 2);
+            });
+        }
+        
+        // 更新UI
+        function updateUI() {
+            if (currentWord) { // Check if currentWord is not null
+                wordMeaningEl.textContent = currentWord.meaning; // This should be Chinese meaning now
+                wordIconEl.src = currentWord.icon; // Generic icon
+                wordIconEl.alt = currentWord.meaning;
+            } else {
+                // Handle case where currentWord might be temporarily null (e.g. during init before first selection)
+                wordMeaningEl.textContent = "加载中...";
+                wordIconEl.src = GENERIC_ICON_URL; 
+                wordIconEl.alt = "加载中";
+            }
+            scoreEl.textContent = score;
+            comboEl.textContent = combo;
+            maxComboEl.textContent = maxCombo;
+        }
+        
+        // 键盘控制
+        document.addEventListener("keydown", e => {
+            if (gamePaused && !gameOver && isWordCompletePopupActive) {
+                // Handle Enter key for word complete popup only
+                if (e.key === "Enter") {
+                    continueGame();
+                    return; // Prevent further processing
+                }
+                return; // Don't process other keys when paused
+            }
+            
+            if (gameOver) {
+                // Handle keys for game over state
+                if (e.key === "Enter" || e.key === " ") {
+                    initGame();
+                }
+                return; // Don't process other keys when game over
+            }
+            
+            // Normal game controls when neither paused nor game over
+            switch (e.key) {
+                case "ArrowUp":
+                    if (direction !== "DOWN") nextDirection = "UP";
+                    break;
+                case "ArrowDown":
+                    if (direction !== "UP") nextDirection = "DOWN";
+                    break;
+                case "ArrowLeft":
+                    if (direction !== "RIGHT") nextDirection = "LEFT";
+                    break;
+                case "ArrowRight":
+                    if (direction !== "LEFT") nextDirection = "RIGHT";
+                    break;
+            }
+        });
+        
+        // Add a direct Enter key handler to the continue button
+        continueBtn.addEventListener("keydown", function(e) {
+            if (e.key === "Enter") {
+                e.preventDefault(); // Prevent default behavior
+                continueGame();
+            }
+        });
+        
+        // 重新开始按钮
+        restartBtn.addEventListener("click", initGame);
+        
+        // 继续游戏按钮
+        continueBtn.addEventListener("click", continueGame);
+        
+        // 点击展开/收起游戏说明
+        instructionsToggle.addEventListener("click", () => {
+            instructionsEl.classList.toggle("expanded");
+        });
+        
+        // Populate word group selector
+        function populateWordGroupSelector() {
+            for (const groupKey in WORD_GROUPS) {
+                if (Object.hasOwnProperty.call(WORD_GROUPS, groupKey)) {
+                    const option = document.createElement("option");
+                    option.value = groupKey;
+                    option.textContent = `第 ${groupKey} 组`; // Text for dropdown, e.g., "第 1 组"
+                    wordGroupSelect.appendChild(option);
+                }
+            }
+        }
+
+        // Event listener for word group selection
+        wordGroupSelect.addEventListener("change", (event) => {
+            const selectedGroupKey = event.target.value;
+            
+            // If the game is over, fully reset with initGame
+            // Otherwise just change the word group while preserving snake state
+            if (gameOver) {
+                if (WORD_GROUPS[selectedGroupKey]) {
+                    currentWordList = WORD_GROUPS[selectedGroupKey];
+                    initGame(); // Complete reset when game is over
+                }
+            } else {
+                changeWordGroup(selectedGroupKey); // Preserve snake when game is ongoing
+            }
+        });
+        
+        // 触摸控制（移动设备）
+        let touchStartX = 0;
+        let touchStartY = 0;
+        
+        document.addEventListener("touchstart", e => {
+            if (gamePaused) return;
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+        }, false);
+        
+        document.addEventListener("touchmove", e => {
+            if (gamePaused || !touchStartX || !touchStartY) return;
+            
+            const touchEndX = e.touches[0].clientX;
+            const touchEndY = e.touches[0].clientY;
+            
+            const diffX = touchStartX - touchEndX;
+            const diffY = touchStartY - touchEndY;
+            
+            // 判断滑动方向
+            if (Math.abs(diffX) > Math.abs(diffY)) {
+                // 水平滑动
+                if (diffX > 0) {
+                    // 向左滑
+                    if (direction !== "RIGHT") nextDirection = "LEFT";
+                } else {
+                    // 向右滑
+                    if (direction !== "LEFT") nextDirection = "RIGHT";
+                }
+            } else {
+                // 垂直滑动
+                if (diffY > 0) {
+                    // 向上滑
+                    if (direction !== "DOWN") nextDirection = "UP";
+                } else {
+                    // 向下滑
+                    if (direction !== "UP") nextDirection = "DOWN";
+                }
+            }
+            
+            touchStartX = 0;
+            touchStartY = 0;
+            e.preventDefault();
+        }, false);
+        
+        // 开始游戏
+        populateWordGroupSelector(); 
+        const initialGroupKey = wordGroupSelect.value || Object.keys(WORD_GROUPS)[0];
+        if (WORD_GROUPS[initialGroupKey]) {
+            currentWordList = WORD_GROUPS[initialGroupKey];
+        } else if (Object.keys(WORD_GROUPS).length > 0) { // Fallback if initial key is somehow invalid but groups exist
+            currentWordList = WORD_GROUPS[Object.keys(WORD_GROUPS)[0]];
+            wordGroupSelect.value = Object.keys(WORD_GROUPS)[0]; // Sync dropdown
+        }
+        initGame(); 
+        canvas.focus(); // Initial focus on game start
+    </script>
+</body>
+</html>
